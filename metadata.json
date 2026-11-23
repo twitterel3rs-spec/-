@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix Remix x صنارة وشبكة موبايل",
+  "description": "نظام إدارة مطعم أسماك متكامل: نقطة بيع، مكالمات وعملاء، أسعار يومية ومخزون، أوردرات دليفري وموصلين، وموظفين وفواتير",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

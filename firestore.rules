@@ -1,0 +1,219 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validation Helpers ---
+
+    function isValidMenuItem(data) {
+      return (!('id' in data) || (data.id is string && isValidId(data.id))) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.price is number && data.price >= 0 &&
+             (!('costPrice' in data) || (data.costPrice is number && data.costPrice >= 0)) &&
+             (!('stockQuantity' in data) || data.stockQuantity is number) &&
+             (!('minStockAlert' in data) || data.minStockAlert is number) &&
+             (!('unit' in data) || (data.unit is string && data.unit.size() <= 50)) &&
+             (!('targetPrinter' in data) || (data.targetPrinter is string && data.targetPrinter.size() <= 100)) &&
+             (!('kitchenName' in data) || (data.kitchenName is string && data.kitchenName.size() <= 150)) &&
+             (!('supportsPreparation' in data) || data.supportsPreparation is bool) &&
+             (!('isArchived' in data) || data.isArchived is bool) &&
+             (!('isActive' in data) || data.isActive is bool) &&
+             (!('displayOrder' in data) || data.displayOrder is int) &&
+             (!('isPlateWeightEnabled' in data) || data.isPlateWeightEnabled is bool) &&
+             (!('plateWeightKg' in data) || data.plateWeightKg is number) &&
+             (!('pricePerKg' in data) || data.pricePerKg is number);
+    }
+
+    function isValidCategory(data) {
+      return (!('id' in data) || (data.id is string && isValidId(data.id))) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             (!('color' in data) || (data.color is string && data.color.size() <= 20)) &&
+             (!('sortOrder' in data) || data.sortOrder is int) &&
+             (!('isArchived' in data) || data.isArchived is bool);
+    }
+
+    function isValidCloudOrder(data) {
+      return (!('id' in data) || (data.id is string && isValidId(data.id))) &&
+             data.orderNumber is int && data.orderNumber > 0 &&
+             (!('customerName' in data) || (data.customerName is string && data.customerName.size() <= 150)) &&
+             (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() <= 50)) &&
+             data.orderType is string && data.orderType.size() > 0 && data.orderType.size() <= 50 &&
+             data.status is string && data.status in ['NEW', 'PENDING', 'PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'] &&
+             data.printStatus is string && data.printStatus in ['SAVED_ONLY', 'PENDING_PRINT', 'PRINTING', 'PRINT_REQUESTED', 'PRINTED', 'ERROR'] &&
+             (!('requestedPrinterTarget' in data) || (data.requestedPrinterTarget is string && data.requestedPrinterTarget.size() <= 100)) &&
+             (!('reprintReason' in data) || (data.reprintReason is string && data.reprintReason.size() <= 200)) &&
+             (!('isArchived' in data) || data.isArchived is bool) &&
+             (!('shiftNumber' in data) || data.shiftNumber is int) &&
+             (!('itemsJson' in data) || (data.itemsJson is string && data.itemsJson.size() <= 500000)) &&
+             (!('subtotal' in data) || (data.subtotal is number && data.subtotal >= 0)) &&
+             (!('deliveryFee' in data) || (data.deliveryFee is number && data.deliveryFee >= 0)) &&
+             (!('discount' in data) || (data.discount is number && data.discount >= 0)) &&
+             data.total is number && data.total >= 0 &&
+             (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 50)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             (!('createdByTerminal' in data) || (data.createdByTerminal is string && data.createdByTerminal.size() <= 100)) &&
+             (!('printedByTerminal' in data) || (data.printedByTerminal is string && data.printedByTerminal.size() <= 100));
+    }
+
+    function isValidTerminal(data) {
+      return (!('id' in data) || (data.id is string && isValidId(data.id))) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.isMaster is bool &&
+             data.canPrint is bool &&
+             (!('printerListJson' in data) || (data.printerListJson is string && data.printerListJson.size() <= 20000)) &&
+             (!('lastActive' in data) || (data.lastActive is timestamp && data.lastActive <= request.time));
+    }
+
+    function isValidShift(data) {
+      return (!('id' in data) || (data.id is string && isValidId(data.id))) &&
+             data.shiftNumber is int && data.shiftNumber >= 1 &&
+             data.cashierName is string && data.cashierName.size() <= 100 &&
+             data.openedAtMs is int && data.openedAtMs >= 0 &&
+             (!('closedAtMs' in data) || (data.closedAtMs is int && data.closedAtMs >= 0)) &&
+             (!('openingBalance' in data) || data.openingBalance is number) &&
+             (!('totalCashSales' in data) || data.totalCashSales is number) &&
+             (!('totalWalletSales' in data) || data.totalWalletSales is number) &&
+             (!('totalExpenses' in data) || data.totalExpenses is number) &&
+             (!('actualDrawerCash' in data) || data.actualDrawerCash is number) &&
+             (!('expectedDrawerCash' in data) || data.expectedDrawerCash is number) &&
+             (!('difference' in data) || data.difference is number) &&
+             (!('ordersCount' in data) || data.ordersCount is int) &&
+             data.isClosed is bool &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));
+    }
+
+    function isValidBackup(data) {
+      return (!('id' in data) || (data.id is string && isValidId(data.id))) &&
+             data.backupName is string && data.backupName.size() > 0 && data.backupName.size() <= 200 &&
+             data.dataJson is string && data.dataJson.size() <= 5000000 &&
+             data.version is string && data.version.size() <= 50;
+    }
+
+    // --- User scoped collections ---
+
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+
+      // 1. Menu Items
+      match /menu_items/{itemId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(itemId);
+        allow create: if isOwner(userId) && isValidId(itemId) &&
+                         (!('id' in incoming()) || incoming().id == itemId) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidMenuItem(incoming());
+        allow update: if isOwner(userId) && isValidId(itemId) &&
+                         (!('id' in incoming()) || incoming().id == itemId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidMenuItem(incoming());
+        allow delete: if isOwner(userId) && isValidId(itemId);
+      }
+
+      // 2. Categories
+      match /categories/{categoryId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(categoryId);
+        allow create: if isOwner(userId) && isValidId(categoryId) &&
+                         (!('id' in incoming()) || incoming().id == categoryId) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidCategory(incoming());
+        allow update: if isOwner(userId) && isValidId(categoryId) &&
+                         (!('id' in incoming()) || incoming().id == categoryId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidCategory(incoming());
+        allow delete: if isOwner(userId) && isValidId(categoryId);
+      }
+
+      // 3. Cloud Orders
+      match /cloud_orders/{orderId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(orderId);
+        allow create: if isOwner(userId) && isValidId(orderId) &&
+                         (!('id' in incoming()) || incoming().id == orderId) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidCloudOrder(incoming());
+        allow update: if isOwner(userId) && isValidId(orderId) &&
+                         (!('id' in incoming()) || incoming().id == orderId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidCloudOrder(incoming());
+        allow delete: if isOwner(userId) && isValidId(orderId);
+      }
+
+      // 4. Terminals
+      match /terminals/{terminalId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(terminalId);
+        allow create: if isOwner(userId) && isValidId(terminalId) &&
+                         (!('id' in incoming()) || incoming().id == terminalId) &&
+                         isValidTerminal(incoming());
+        allow update: if isOwner(userId) && isValidId(terminalId) &&
+                         (!('id' in incoming()) || incoming().id == terminalId) &&
+                         isValidTerminal(incoming());
+        allow delete: if isOwner(userId) && isValidId(terminalId);
+      }
+
+      // 5. Backups
+      match /backups/{backupId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(backupId);
+        allow create: if isOwner(userId) && isValidId(backupId) &&
+                         (!('id' in incoming()) || incoming().id == backupId) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidBackup(incoming());
+        allow update: if isOwner(userId) && isValidId(backupId) &&
+                         (!('id' in incoming()) || incoming().id == backupId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidBackup(incoming());
+        allow delete: if isOwner(userId) && isValidId(backupId);
+      }
+
+      // 6. Global sequence counter (shared order counter across all terminals)
+      match /counters/{counterId} {
+        allow list, get: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(counterId);
+        allow delete: if isOwner(userId) && isValidId(counterId);
+      }
+
+      // 7. Shifts (Synchronized work shifts across cashier and seller terminals)
+      match /shifts/{shiftId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(shiftId);
+        allow create: if isOwner(userId) && isValidId(shiftId) &&
+                         (!('id' in incoming()) || incoming().id == shiftId) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidShift(incoming());
+        allow update: if isOwner(userId) && isValidId(shiftId) &&
+                         (!('id' in incoming()) || incoming().id == shiftId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidShift(incoming());
+        allow delete: if isOwner(userId) && isValidId(shiftId);
+      }
+    }
+  }
+}

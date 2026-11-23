@@ -1,0 +1,364 @@
+{
+  "entities": {
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Represents an individual menu item in the restaurant system. Identified uniquely by UUID so items with similar names are never merged or duplicated.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique UUID of the menu item"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the dish or fish item"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category name for grouping"
+        },
+        "price": {
+          "type": "number",
+          "description": "Selling price"
+        },
+        "costPrice": {
+          "type": "number",
+          "description": "Cost price for profit calculation"
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "Current stock count or weight"
+        },
+        "minStockAlert": {
+          "type": "number",
+          "description": "Minimum stock reorder alert threshold"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Measurement unit (kg, meal, piece)"
+        },
+        "targetPrinter": {
+          "type": "string",
+          "description": "Assigned target printer (MAIN, KITCHEN_1, KITCHEN_2, or comma-separated)"
+        },
+        "kitchenName": {
+          "type": "string",
+          "description": "Display name of item on kitchen order tickets"
+        },
+        "supportsPreparation": {
+          "type": "boolean",
+          "description": "Whether item supports fish cooking preparation styles"
+        },
+        "isArchived": {
+          "type": "boolean",
+          "description": "Whether item is archived"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether item is currently visible in POS"
+        },
+        "displayOrder": {
+          "type": "integer",
+          "description": "Display order index in menu"
+        },
+        "isPlateWeightEnabled": {
+          "type": "boolean",
+          "description": "Whether plate weight deduction is active"
+        },
+        "plateWeightKg": {
+          "type": "number",
+          "description": "Plate tare weight in kg"
+        },
+        "pricePerKg": {
+          "type": "number",
+          "description": "Price per kg when sold by weight"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "name", "category", "price", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Standardized category definition for menu items to avoid duplicate categories across terminals.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique category identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of category"
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color code for POS tiles"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Sorting priority in menu"
+        },
+        "isArchived": {
+          "type": "boolean",
+          "description": "Whether category is archived"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "name", "createdAt"]
+    },
+    "CloudOrder": {
+      "title": "CloudOrder",
+      "description": "Synchronized order shared across all terminals. Terminals create orders with PENDING_PRINT status; the master printing device prints and updates status to PRINTED.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique UUID of the order"
+        },
+        "orderNumber": {
+          "type": "integer",
+          "description": "Unified sequential order number shared across cashier and seller devices"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer name"
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Customer phone number"
+        },
+        "orderType": {
+          "type": "string",
+          "description": "Type of order: TAKEAWAY, DINE_IN, HALL, DELIVERY"
+        },
+        "status": {
+          "type": "string",
+          "description": "Workflow status: NEW, PENDING, PREPARING, READY, OUT_FOR_DELIVERY, COMPLETED, CANCELLED"
+        },
+        "printStatus": {
+          "type": "string",
+          "description": "Print dispatch status: SAVED_ONLY, PENDING_PRINT, PRINTING, PRINT_REQUESTED, PRINTED, ERROR"
+        },
+        "requestedPrinterTarget": {
+          "type": "string",
+          "description": "Specific printer target for remote print requests (ALL, MAIN, KITCHEN_1, KITCHEN_2, etc.)"
+        },
+        "reprintReason": {
+          "type": "string",
+          "description": "Optional reason when reprinting remotely"
+        },
+        "isArchived": {
+          "type": "boolean",
+          "description": "Whether order is archived across all devices"
+        },
+        "shiftNumber": {
+          "type": "integer",
+          "description": "Work shift sequence number attached to this order"
+        },
+        "itemsJson": {
+          "type": "string",
+          "description": "Serialized JSON string of order items with quantities, prices, and cooking preparations"
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Order subtotal before discounts/fees"
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Delivery fee if applicable"
+        },
+        "discount": {
+          "type": "number",
+          "description": "Discount applied"
+        },
+        "total": {
+          "type": "number",
+          "description": "Final payable amount"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method: CASH, WALLET"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Order special instructions"
+        },
+        "createdByTerminal": {
+          "type": "string",
+          "description": "Seller/cashier name who received and created the order"
+        },
+        "printedByTerminal": {
+          "type": "string",
+          "description": "Identifier of the master terminal that printed the ticket"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "orderNumber", "orderType", "status", "printStatus", "total", "createdAt"]
+    },
+    "Terminal": {
+      "title": "Terminal",
+      "description": "Registered cashier or seller device in the restaurant.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique device or station ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Terminal label e.g. Cashier 1, Waiter Tablet, Master Printer"
+        },
+        "isMaster": {
+          "type": "boolean",
+          "description": "True if this terminal holds physical printers"
+        },
+        "canPrint": {
+          "type": "boolean",
+          "description": "Whether direct printing is permitted on this device"
+        },
+        "printerListJson": {
+          "type": "string",
+          "description": "Serialized summary of enabled printers on master cashier for seller remote print buttons"
+        },
+        "lastActive": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Heartbeat timestamp"
+        }
+      },
+      "required": ["id", "name", "isMaster", "canPrint"]
+    },
+    "Shift": {
+      "title": "Shift",
+      "description": "Shared cashier work shift synced across all terminals.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "shiftNumber": { "type": "integer" },
+        "cashierName": { "type": "string" },
+        "openedAtMs": { "type": "integer" },
+        "closedAtMs": { "type": "integer" },
+        "openingBalance": { "type": "number" },
+        "totalCashSales": { "type": "number" },
+        "totalWalletSales": { "type": "number" },
+        "totalExpenses": { "type": "number" },
+        "actualDrawerCash": { "type": "number" },
+        "expectedDrawerCash": { "type": "number" },
+        "difference": { "type": "number" },
+        "ordersCount": { "type": "integer" },
+        "isClosed": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "shiftNumber", "cashierName", "openedAtMs", "isClosed", "createdAt"]
+    },
+    "Counter": {
+      "title": "Counter",
+      "description": "Shared sequential counter for unified order numbering across all terminals.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Counter identifier e.g. order_counter"
+        },
+        "lastOrderNumber": {
+          "type": "integer",
+          "description": "Highest allocated order sequence number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last sequence increment"
+        }
+      },
+      "required": ["id", "lastOrderNumber"]
+    },
+    "BackupSnapshot": {
+      "title": "BackupSnapshot",
+      "description": "Complete safe backup snapshot of menu, settings, and orders.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique backup UUID"
+        },
+        "backupName": {
+          "type": "string",
+          "description": "Descriptive name or timestamp label of backup"
+        },
+        "dataJson": {
+          "type": "string",
+          "description": "Compressed or raw JSON data payload"
+        },
+        "version": {
+          "type": "string",
+          "description": "System schema version"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when backup was created"
+        }
+      },
+      "required": ["id", "backupName", "dataJson", "version", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/menu_items/{itemId}": {
+      "schema": "MenuItem",
+      "description": "Master list of menu items shared across all cashier and seller terminals."
+    },
+    "/users/{userId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Standard menu categories to maintain uniformity across all terminals."
+    },
+    "/users/{userId}/cloud_orders/{orderId}": {
+      "schema": "CloudOrder",
+      "description": "Active and completed order queue shared between cashier terminals and seller tablets."
+    },
+    "/users/{userId}/terminals/{terminalId}": {
+      "schema": "Terminal",
+      "description": "Registration of terminals and their printing roles."
+    },
+    "/users/{userId}/shifts/{shiftId}": {
+      "schema": "Shift",
+      "description": "Work shifts synced between cashier and seller terminals."
+    },
+    "/users/{userId}/counters/{counterId}": {
+      "schema": "Counter",
+      "description": "Shared atomic counters for sequential order numbers."
+    },
+    "/users/{userId}/backups/{backupId}": {
+      "schema": "BackupSnapshot",
+      "description": "Safe cloud backup store for smooth recovery and migration."
+    }
+  }
+}
